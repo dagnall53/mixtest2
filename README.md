@@ -17,7 +17,7 @@ but: When tested with proper "DAC" output, the Sound quality is very poor, it so
 I have also now tried this mixer code with NoDAC... To me, the NoDAc output is much clearer BUT..
 Whilst the The pizzicato scales and bowed arpeggios are audible, there is now a very obvious regular clicking present that is perhaps masked on the DAC output, or is causing the "wobbly" effect? 
 
-My conclusion was that there was something in the mixer adding spikes to the output. 
+My conclusion was that there was something in the mixer adding periodic spikes to the output. 
 
 EXPERIMENTS: carried out on the code: 
 --------------------------------------
