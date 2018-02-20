@@ -37,12 +37,13 @@ next,
 -----
 Removing (commenting out) yield() from loop "isrunning" code......no effect on playing. still cliks at 1-2 hz
 
-lastly: Commenting out the Channel->stop() in the loops (because as far as I can see, the mixer is running, even if there is no input signal..).. this again has no effect. Clicks are still present and the code works.   
+then I commented out the Channel->stop() in the loops (because as far as I can see, the mixer is running, even if there is no input signal..).. this again has no effect. Clicks are still present and the code works.   
 
-I have now added directives to explore  adding  more "channels" 
-With _2CH enabled (but not _3CH) works as described above
+I have now added two directives to explore  adding  more or less "channels" 
+With _2CH enabled (but not _3CH) code works as described above
 
-with _3CH  enabled, the sounds are much worse,  unintelligable, but no clicks...
+with _3CH and _2CH enabled, the sounds are much worse,  unintelligable, but no clicks...
+
 Commenting out both _2 and _3 ch: The pizzicato sound is now audible with a sort of quiet background "mush", but NO CLICKS 
 
 I have updated the example ino to this stage of the experiment...
