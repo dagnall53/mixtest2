@@ -20,23 +20,32 @@ Whilst the The pizzicato scales and bowed arpeggios are audible, there is now a 
 My conclusion was that there was something in the mixer adding spikes to the output. 
 
 EXPERIMENTS: carried out on the code: 
+--------------------------------------
 Working further with the NoDAc variant: 
-setting mainOut->SetBitsPerSample(8); /gives a very "wooshy sound.. nasty, but no effect on clicks.. revert to 16 bit
+
+setting mainOut->SetBitsPerSample(8); /gives a very "wooshy sound.. nasty, but no effect on clicks.. so revert to 16 bit
+
 increasing output buffer size (  mainOut = new AudioMixerOutBuffer( 64, out );) ..No apparent effect 
+
 then also increasing channel buffers (  channel2 = new AudioMixerInBuffer( 32, mainOut, 2 );) .. no apparent effects
+
 Reducing buffer size to "2" for mixer out and channels... Clicks now seem slightly more frequent (perhaps twice as often, 4hz or so..
+
 Reverting to buffersize =8 for all ...clicks again at about 1Hz
 
-next, Removing (commenting out) yield() from loop "isrunning" code......no effect on playing. still cliks at 1-2 hz
-lastly: Commenting out the Channel->stop() in the loops (because as far as I can see, the mixer is running, even if the e is no input signal..).. this again has no effect. Clicks are still present and the code works.   
+next,
+-----
+Removing (commenting out) yield() from loop "isrunning" code......no effect on playing. still cliks at 1-2 hz
 
-I have added directives to explore  adding  more "channels" ?
+lastly: Commenting out the Channel->stop() in the loops (because as far as I can see, the mixer is running, even if there is no input signal..).. this again has no effect. Clicks are still present and the code works.   
+
+I have now added directives to explore  adding  more "channels" 
 With _2CH enabled (but not _3CH) works as described above
 
 with _3CH  enabled, the sounds are much worse,  unintelligable, but no clicks...
 Commenting out both _2 and _3 ch: The pizzicato sound is now audible with a sort of quiet background "mush", but NO CLICKS 
 
-I have updated the example to this stage of the experiment...
+I have updated the example ino to this stage of the experiment...
 
 
 
