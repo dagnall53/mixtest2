@@ -22,10 +22,12 @@
  *  
  *  DAGNALL
 */
+#define _NoDAC
 
-
-#define _Ch2_ON   //
-//#define _Ch3_ON   //Directive to allow quick explores of what happens if we have 4, 3 channels or 2 or 1
+//#define AudioDebug   // see debug from the mixer? ...does not seem to show anything...
+#define _Ch1_ON  //always on?, 
+//#define _Ch2_ON   //
+#define _Ch3_ON   //Directive to allow quick explores of what happens if we have 4, 3 channels or 2 or 1
 //#define _Ch4_ON    //
 
 #include <Arduino.h>
@@ -42,8 +44,12 @@
 
 // #include "AudioOutputI2Sesp32.h"
 // #include "AudioOutputI2S.h"
-//#include "AudioOutputI2SDAC.h"   //test
-#include "AudioOutputI2SNoDAC.h"
+
+#ifdef _NoDAC
+#include "AudioOutputI2SNoDAC.h" //
+#else
+#include "AudioOutputI2SDAC.h"   //test
+#endif
 
 #include "AudioMixerOutBuffer.h"
 #include "AudioMixerInBuffer.h"
@@ -53,8 +59,9 @@
 //#include "angels.h"
 //#include "arabicbass.h"
 //#include "viola.h"
-
+#ifdef _Ch1_ON
 AudioGeneratorWAV *wav1;
+#endif
 #ifdef _Ch2_ON
 AudioGeneratorWAV *wav2;
 #endif
@@ -65,8 +72,9 @@ AudioGeneratorWAV *wav3;
 #ifdef _Ch4_ON
 AudioGeneratorWAV *wav4;
 #endif
-
+#ifdef _Ch1_ON
 AudioFileSourceSPIFFS *file1;
+#endif
 #ifdef _Ch2_ON
 AudioFileSourceSPIFFS *file2;
 #endif
@@ -77,11 +85,18 @@ AudioFileSourceSPIFFS *file3;
 AudioFileSourceSPIFFS *file4;
 #endif
 
-//AudioOutputI2SDAC *out; // test
-AudioOutputI2SNoDAC *out;   
+#ifdef _NoDAC
+AudioOutputI2SNoDAC *out; //
+#else
+AudioOutputI2SDAC *out; // test
+#endif
+//
+   
 
 
+#ifdef _Ch1_ON
 AudioMixerInBuffer *channel1;
+#endif
 #ifdef _Ch2_ON
 AudioMixerInBuffer *channel2;
 #endif
@@ -97,7 +112,10 @@ AudioMixerOutBuffer *mainOut;
 
   int soundplays = 0;
 
-  
+uint32_t TIMER1;  
+uint32_t TIMER2;  
+uint32_t TIMER3;  
+uint32_t TIMER4;  
 void setup()
 {
   soundplays = 0;
@@ -105,9 +123,10 @@ void setup()
 
   Serial.begin(115200);
   delay(1000);
- // file1 = new AudioFileSourceSPIFFS( "/viochrom44.wav" ); // long duration
- 
-  file1 = new AudioFileSourceSPIFFS( "/piz44.wav" ); // long duration 
+
+ #ifdef _Ch1_ON
+  file1 = new AudioFileSourceSPIFFS( "/silence.wav"); // start with silence?
+  #endif
   #ifdef _Ch2_ON
   file2 = new AudioFileSourceSPIFFS( "/silence.wav"); // start with ony 1 ch
   #endif
@@ -118,17 +137,20 @@ void setup()
    file4 = new AudioFileSourceSPIFFS( "/silence.wav"); // start with ony 1 ch
 #endif
 
+#ifdef _NoDAC
+  out = new AudioOutputI2SNoDAC();Serial.println("-----------Using NoDAC---------");
+#else
+ out = new AudioOutputI2SDAC();Serial.println("-----------Using I2S DAC---------"); //test
+#endif
 
- // out = new AudioOutputI2SDAC(); //test
-  out = new AudioOutputI2SNoDAC();
+
   // Adjust Volume of Output
-  out->SetGain(0.2);
+  out->SetGain(0.5);
 
-  // out2 = new AudioOutputI2S();
-  // out2->SetGain(0.2);
-  // out2->SetPinout(26, 25, 33); // the original loibrary uses pin 22 rather than 33 for DIN
-  
+ 
+#ifdef _Ch1_ON  
   wav1 = new AudioGeneratorWAV();
+  #endif
   #ifdef _Ch2_ON
   wav2 = new AudioGeneratorWAV();
 #endif
@@ -141,44 +163,47 @@ void setup()
   
   Serial.println("Define MainOut of Mixer");
   // new with Mixer, connect mainOut to the output
-  mainOut = new AudioMixerOutBuffer( 8, out );
+  mainOut = new AudioMixerOutBuffer( 128, out );
   
-  mainOut->SetRate(44100);
-  mainOut->SetChannels(2); // 2=Stereo, 1=Mono
-  mainOut->SetBitsPerSample(16); // 16 Bit
+ // mainOut->SetRate(44100);
+  mainOut->SetChannels(1); // 2=Stereo, 1=Mono
+//  mainOut->SetBitsPerSample(16); // 16 Bit
 
   Serial.println("Begin MainOut");
   mainOut->begin();
 
   // define channel1 of the Mixer and strip it to mainOut as Strip 1
   // defined with buffersize==8, sink==mainout, channelnumber==1
-  
+#ifdef _Ch1_ON  
   Serial.println("Define Channel1 of Mixer");
-  channel1 = new AudioMixerInBuffer( 8, mainOut, 1 );
-  channel1->begin();
+  channel1 = new AudioMixerInBuffer( 32, mainOut, 0 );  // try ch 0
+  channel1->begin();  
+  #endif
  #ifdef _Ch2_ON 
   // define channel2 of the Mixer and strip it to mainOut as Strip 2
   Serial.println("Define Channel2 of Mixer");  
-  channel2 = new AudioMixerInBuffer( 8, mainOut, 2 );
+  channel2 = new AudioMixerInBuffer( 32, mainOut, 2 );
   channel2->begin();
   #endif
 #ifdef _Ch3_ON
    // define channel2 of the Mixer and strip it to mainOut as Strip 2
   Serial.println("Define Channel3 of Mixer");  
-  channel3 = new AudioMixerInBuffer( 8, mainOut, 3 );
+  channel3 = new AudioMixerInBuffer( 32, mainOut, 3 );
   channel3->begin();
 #endif
 #ifdef _Ch4_ON
    // define channel2 of the Mixer and strip it to mainOut as Strip 2
   Serial.println("Define Channel4 of Mixer");  
-  channel4 = new AudioMixerInBuffer( 8, mainOut, 4 );
+  channel4 = new AudioMixerInBuffer( 32, mainOut, 4 );
   channel4->begin();
 #endif
-
-  Serial.println("Begin Wav1");
-  wav1->begin(file1, channel1);
+/*
+  Serial.println("Begin Wavs");
+  #ifdef _Ch1_ON
+//  wav1->begin(file1, channel1);
+  #endif
   #ifdef _Ch2_ON
-  wav2->begin(file2, channel2);
+//  wav2->begin(file2, channel2);
   #endif
   #ifdef _Ch3_ON 
   wav3->begin(file3, channel3);
@@ -186,41 +211,76 @@ void setup()
   #ifdef _Ch4_ON 
   wav4->begin(file4, channel4);
   #endif
+  */
+ TIMER1=millis()+500; 
+  TIMER2=millis()+10000; 
+   TIMER3=millis()+25000; 
+    TIMER4=millis()+2000; 
 }
 
 void loop()
 {
+
+#ifdef _Ch1_ON  
+ // if (!wav1->isRunning()){Serial.print(".");}
+if ((millis()>= TIMER1)&&(!wav1->isRunning())){ //do not try and interrupt 
+        //  file1 = new AudioFileSourceSPIFFS( "/viochrom44.wav" ); // long duration
+          file1 = new AudioFileSourceSPIFFS( "/piz44.wav" ); Serial.println("Initiating ch 1 : 14 secs Pizzicato ");// long duration 
+                  wav1->begin(file1, channel1);
+                  soundplays =soundplays + 1;
+     TIMER1=millis()+20000;
+   }
+   #endif
+   
+#ifdef _Ch2_ON  
+if ((millis()>= TIMER2)&&(!wav2->isRunning())){
+      file2 = new AudioFileSourceSPIFFS( "/viochrom44.wav" ); Serial.println("Initiating ch 2 : bowed Arpeggio ");// long duration
+         // file2 = new AudioFileSourceSPIFFS( "/piz44.wav" ); Serial.println("Initiating ch 2 : 14 secs Pizzicato ");// long duration 
+        wav2->begin(file2, channel2);
+     soundplays =soundplays + 1;
+     TIMER2=millis()+5000;
+   }
+   #endif
+  #ifdef _Ch3_ON  
+  if ((millis()>= TIMER3)&&(!wav3->isRunning())){
+  file3 = new AudioFileSourceSPIFFS( "/1000Hz_-3dBFS_3s.wav" ); Serial.println("Initiating ch 3 : 1k tone ");// long duration
+      //file3 = new AudioFileSourceSPIFFS( "/viochrom44.wav" ); Serial.println("Initiating ch 3 : bowed Arpeggio ");// long duration
+         // file3 = new AudioFileSourceSPIFFS( "/piz44.wav" ); Serial.println("Initiating ch 3 : 14 secs Pizzicato ");// long duration 
+        wav3->begin(file3, channel3);
+     soundplays =soundplays + 1;
+     TIMER2=millis()+5000;
+   }
+   #endif
+   #ifdef _Ch4_ON  
+if ((millis()>= TIMER4)&&(!wav4->isRunning())){
+      file4 = new AudioFileSourceSPIFFS( "/viochrom44.wav" ); Serial.println("Initiating ch 4 : bowed Arpeggio ");// long duration
+         // file4 = new AudioFileSourceSPIFFS( "/piz44.wav" ); Serial.println("Initiating ch 4 : 14 secs Pizzicato ");// long duration 
+        wav4->begin(file4, channel4);
+     soundplays =soundplays + 1;
+     TIMER4=millis()+5000;
+   }
+   #endif 
+//delay(100);
  
+ #ifdef _Ch1_ON
   if (wav1->isRunning()  ) {
     if (!wav1->loop() ) {
-      soundplays =soundplays + 1;
       wav1->stop(); 
-   //   channel1->stop();
-   //   yield();
-      if ( soundplays <= 40 ){
-         if  ( soundplays <= 30 ){file1 = new AudioFileSourceSPIFFS( "/piz44.wav" );Serial.println("ch 1 : 14 secs Pizzicato ");}
-          else{file1 = new AudioFileSourceSPIFFS( "/silence.wav" );Serial.println(" CH1 silence ");}
-        wav1->begin(file1, channel1); // channel1
-      }  
-    }  
-  } 
+      channel1->stop();
+     // yield();
+      } } 
+  #endif
   
 #ifdef _Ch2_ON
-  if (wav2->isRunning()  ) {
+    if (wav2->isRunning()  ) {
     if (!wav2->loop() ) {
-      soundplays =soundplays + 1;
       wav2->stop(); 
-    //  channel2->stop();
-  //    yield();
-      if ( soundplays <= 40 ){
-        if  ( soundplays >=25 ){ 
-        file2 = new AudioFileSourceSPIFFS( "/viochrom44.wav" );Serial.println(" ch 2 playing bowed arpeggio");}
-        else{file2 = new AudioFileSourceSPIFFS( "/silence.wav" );Serial.println("ch 2 :4 sec silence");}
-        wav2->begin(file2, channel2 );
+      channel2->stop();
+      yield();
       }  
-    }
-  } 
+      } 
   #endif
+  
 #ifdef _Ch3_ON
  if (wav3->isRunning()  ) {
     if (!wav3->loop() ) {
@@ -228,13 +288,7 @@ void loop()
       wav3->stop(); 
    //   channel1->stop();
    //   yield();
-      if ( soundplays <= 40 ){
-         if  ( soundplays <= 20 ){file3 = new AudioFileSourceSPIFFS( "/silence.wav" );Serial.println("ch 3 :4 sec silence");}
-          else{file3 = new AudioFileSourceSPIFFS( "/piz44.wav" );Serial.println(" ch 3 playing pizzicato");}
-        wav3->begin(file3, channel3); // channel1
-      }  
-    }  
-  } 
+         }  } 
 #endif
 
 #ifdef _Ch4_ON
@@ -244,13 +298,7 @@ void loop()
       wav4->stop(); 
    //   channel4->stop();
    //   yield();
-      if ( soundplays <= 40 ){
-         if  ( soundplays <= 10 ){file4 = new AudioFileSourceSPIFFS( "/silence.wav" );Serial.println("ch 4 :4 sec silence");}
-            else{file4 = new AudioFileSourceSPIFFS( "/piz44.wav" );Serial.println(" ch 4 playing pizzicato");}
-        wav4->begin(file4, channel4); // channel1
-      }  
-    }  
-  } 
+        }   } 
 #endif
 
 
