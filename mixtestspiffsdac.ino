@@ -118,7 +118,7 @@ void setup()
   WiFi.mode(WIFI_OFF);
 
   Serial.begin(115200);
-  delay(1000);
+  delay(100);
 //need to set new file to something in setup , because for houskeeping later all new files will be preceeded by Delete 
 // may be best to set this to a small silent file..
  #ifdef _Ch1_ON
@@ -159,7 +159,7 @@ void setup()
 #endif
 
   int buffersize;   // just to make changing /exploring buffer size easier in development 
-  buffersize=128;
+  buffersize=256;
   int buffersizeM;
   buffersizeM=buffersize;
   
@@ -235,9 +235,10 @@ if ((millis()>= TIMER1)&&(!wav1->isRunning())){ //do not try and interrupt
         }else {
           file1 = new AudioFileSourceSPIFFS( "/piz11.wav" ); Serial.println("Initiating ch 1 : 7 secs 11k Pizzicato ");// long duration 
         }
-                  wav1->begin(file1, channel1); 
+        if (soundplays<=2){Serial.print("playing direct  ");wav1->begin(file1, out); }
+                  else {Serial.print("playing through mixer   ");wav1->begin(file1, channel1); }
                   soundplays =soundplays + 1;
-     TIMER1=millis()+10000;
+     TIMER1=millis()+8000;
    }
    #endif
    
