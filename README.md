@@ -1,4 +1,7 @@
 # mixtest2
+
+updated friday: Discovered that just with 1 channel, the mixer does not play correctly...
+
 revised and updated today: 
 Changed the way that the samples are initiated. They are now initiated on timers in the main loop. 
 This has removed some of the click issues I saw, But:
